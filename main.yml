@@ -1,6 +1,6 @@
 ---
 - name: Upgrade website
-  hosts: windows_webservers
+  hosts: tag_windows_webservers
   serial: 1
   gather_facts: false
   vars: 
