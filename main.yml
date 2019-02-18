@@ -1,0 +1,42 @@
+---
+- name: Upgrade website
+  hosts: windows_web1:windows_web2
+  serial: 1
+  gather_facts: false
+  vars: 
+    - message: "Welcome to our new website!"
+  tasks:
+  - name: Remove this webserver from haproxy
+    haproxy:
+      state: disabled
+      host: '{{ inventory_hostname }}'
+      backend: webservers
+      wait: yes
+    delegate_to: haproxy
+
+  - name: stop webserver
+    win_iis_website:
+      name: "Default Web Site"
+      state: stopped
+
+  - name: Wait 5 seconds to show this server is now disabled
+    pause:
+      seconds: 5
+
+  - name: Copy content of new Web-Server
+    win_copy:
+      content: 'Hello from {{ inventory_hostname }}! -> {{ message }}'
+      dest: 'C:\inetpub\wwwroot\index.html'
+
+  - name: start webserver
+    win_iis_website:
+      name: "Default Web Site"
+      state: started
+
+  - name: Add this webserver again to haproxy
+    haproxy:
+      state: enabled
+      host: '{{ inventory_hostname }}'
+      backend: webservers
+      wait: yes
+    delegate_to: haproxy
